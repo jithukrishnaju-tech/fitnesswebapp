@@ -3,8 +3,42 @@ import Pagination from "@mui/material/Pagination";
 import { Box, Stack, Typography } from "@mui/material";
 import ExerciseCard from "./ExerciseCard";
 import { exerciseOptions, fetchData } from "../utils/fetchData";
-const Exercises = ({ exercises, setExercise, setBodyPart }) => {
-  console.log(exercises);
+const Exercises = ({ exercises, setExercises, bodyPart }) => {
+  useEffect(() => {
+    const fetchExercisesData = async () => {
+      let exercisesData = [];
+
+      if (bodyPart === "all") {
+        exercisesData = await fetchData(
+          "https://exercisedb.p.rapidapi.com/exercises",
+          exerciseOptions
+        );
+      } else {
+        exercisesData = await fetchData(
+          `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}`,
+          exerciseOptions
+        );
+      }
+
+      setExercises(exercisesData);
+    };
+
+    fetchExercisesData();
+  }, [bodyPart]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const exercisesPerPage = 9;
+  const indexofLastExercise = currentPage * exercisesPerPage;
+  const indexofFirstExercise = indexofLastExercise - exercisesPerPage;
+  const currentExercise = exercises.slice(
+    indexofFirstExercise,
+    indexofLastExercise
+  );
+  const paginate = (e, value) => {
+    setCurrentPage(value);
+    window.scrollTo({ top: "1800", behavior: "smooth" });
+  };
+
   return (
     <Box id="exercises" sx={{ mt: { lg: "110px" } }} mt="50px" p="20px">
       <Typography variant="h3" mb="46px">
@@ -16,9 +50,21 @@ const Exercises = ({ exercises, setExercise, setBodyPart }) => {
         flexWrap="wrap"
         justifyContent="center"
       >
-        {exercises.map((exercise, index) => (
+        {currentExercise.map((exercise, index) => (
           <ExerciseCard key={index} exercise={exercise} />
         ))}
+      </Stack>
+      <Stack mt="100px" alignItems="center">
+        {exercises.length > 9 && (
+          <Pagination
+            color="standard"
+            shape="rounded"
+            count={Math.ceil(exercises.length / exercisesPerPage)}
+            page={currentPage}
+            onChange={paginate}
+            size="large"
+          />
+        )}
       </Stack>
     </Box>
   );
